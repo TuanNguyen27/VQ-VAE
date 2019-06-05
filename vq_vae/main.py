@@ -13,33 +13,19 @@ from torchvision.utils import save_image
 from utils.log import setup_logging_and_results
 from vq_vae.auto_encoder import *
 
-models = {'imagenet': {'vqvae': VQ_CVAE},
-          'cifar10': {'vae': CVAE,
-                      'vqvae': VQ_CVAE},
-          'mnist': {'vae': VAE,
-                    'vqvae': VQ_CVAE}}
-datasets_classes = {'imagenet': datasets.ImageFolder,
-                    'cifar10': datasets.CIFAR10,
-                    'mnist': datasets.MNIST}
-dataset_train_args = {'imagenet': {},
-                      'cifar10': {'train': True, 'download': True},
-                      'mnist': {'train': True, 'download': True}}
-dataset_test_args = {'imagenet': {},
-                     'cifar10': {'train': False, 'download': True},
-                     'mnist': {'train': False, 'download': True},
-}
-dataset_sizes = {'imagenet': (3, 256, 224),
-                 'cifar10': (3, 32, 32),
-                 'mnist': (1, 28, 28)}
+models = {'mnist': {'vae': VAE,'vqvae': VQ_CVAE},
+        'Fashionmnist': {'vae': VAE,'vqvae': VQ_CVAE}}
+datasets_classes = {'mnist': datasets.MNIST,
+'Fashionmnist': datasets.FashionMNIST}
+dataset_train_args = {'mnist': {'train': True, 'download': True},
+'Fashionmnist':  {'train': True, 'download': True}}
+dataset_test_args = {'mnist': {'train': False, 'download': True},
+'Fashionmnist':  {'train': False, 'download': True}}
+dataset_sizes = {'mnist': (1, 28, 28), 'Fashionmnist': (1,28,28)}
 
-dataset_transforms = {'imagenet': transforms.Compose([transforms.Resize(128), transforms.CenterCrop(128),
-                                                      transforms.ToTensor(),
-                                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
-                      'cifar10': transforms.Compose([transforms.ToTensor(),
-                                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
+dataset_transforms = {'Fashionmnist': transforms.ToTensor(),
                       'mnist': transforms.ToTensor()}
-default_hyperparams = {'imagenet': {'lr': 2e-4, 'k': 512, 'hidden': 128},
-                       'cifar10': {'lr': 2e-4, 'k': 10, 'hidden': 256},
+default_hyperparams = {'Fashionmnist': {'lr': 1e-4, 'k': 10, 'hidden': 64},
                        'mnist': {'lr': 1e-4, 'k': 10, 'hidden': 64}}
 
 
@@ -47,7 +33,7 @@ def main(args):
     parser = argparse.ArgumentParser(description='Variational AutoEncoders')
 
     model_parser = parser.add_argument_group('Model Parameters')
-    model_parser.add_argument('--model', default='vae', choices=['vae', 'vqvae'],
+    model_parser.add_argument('--model', default='vqvae', choices=['vae', 'vqvae'],
                               help='autoencoder variant to use: vae | vqvae')
     model_parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                               help='input batch size for training (default: 128)')
@@ -75,7 +61,7 @@ def main(args):
                                  help='enables CUDA training')
     training_parser.add_argument('--seed', type=int, default=1, metavar='S',
                                  help='random seed (default: 1)')
-    training_parser.add_argument('--gpus', default='0',
+    training_parser.add_argument('--gpus', default='1',
                                  help='gpus used for training - e.g 0,1,3')
 
     logging_parser = parser.add_argument_group('Logging Parameters')
@@ -205,8 +191,8 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             latest_losses = model.latest_losses()
             for key in latest_losses:
                 losses[key + '_test'] += float(latest_losses[key])
-            if i == 0:
-                save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
+            # if i == 0:
+            #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
             if args.dataset == 'imagenet' and i * len(data) > 1000:
                 break
 
