@@ -10,8 +10,8 @@ import torch.backends.cudnn as cudnn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
-from utils.log import setup_logging_and_results
-from vq_vae.auto_encoder import *
+from log import setup_logging_and_results
+from auto_encoder import *
 
 models = {'mnist': {'vae': VAE,'vqvae': VQ_CVAE},
         'Fashionmnist': {'vae': VAE,'vqvae': VQ_CVAE}}
