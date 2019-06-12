@@ -143,10 +143,10 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
-        print(latest_losses['full_mse'])
-        for key in latest_losses:
-            losses[key + '_train'] += float(latest_losses[key])
-            epoch_losses[key + '_train'] += float(latest_losses[key])
+        print(latest_losses['full_mse'].size())
+        # for key in latest_losses:
+        #     losses[key + '_train'] += float(latest_losses[key])
+        #     epoch_losses[key + '_train'] += float(latest_losses[key])
 
         if batch_idx % log_interval == 0:
             for key in latest_losses:
@@ -190,19 +190,19 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             outputs = model(data)
             model.loss_function(data, *outputs)
             latest_losses = model.latest_losses()
-            for key in latest_losses:
-                losses[key + '_test'] += float(latest_losses[key])
+            # for key in latest_losses:
+            #     losses[key + '_test'] += float(latest_losses[key])
             # if i == 0:
             #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
             if args.dataset == 'imagenet' and i * len(data) > 1000:
                 break
-    for key in losses:
-        if args.dataset != 'imagenet':
-            losses[key] /= (len(test_loader.dataset) / test_loader.batch_size)
-        else:
-            losses[key] /= (i * len(data))
-    loss_string = ' '.join(['{}: {:.6f}'.format(k, v) for k, v in losses.items()])
-    logging.info('====> Test set losses: {}'.format(loss_string))
+    # for key in losses:
+    #     if args.dataset != 'imagenet':
+    #         losses[key] /= (len(test_loader.dataset) / test_loader.batch_size)
+    #     else:
+    #         losses[key] /= (i * len(data))
+    # loss_string = ' '.join(['{}: {:.6f}'.format(k, v) for k, v in losses.items()])
+    # logging.info('====> Test set losses: {}'.format(loss_string))
     return losses
 
 
