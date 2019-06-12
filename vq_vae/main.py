@@ -55,7 +55,7 @@ def main(args):
                                  help='dataset to use: mnist | cifar10')
     training_parser.add_argument('--data-dir', default='/media/ssd/Datasets',
                                  help='directory containing the dataset')
-    training_parser.add_argument('--epochs', type=int, default=20, metavar='N',
+    training_parser.add_argument('--epochs', type=int, default=1, metavar='N',
                                  help='number of epochs to train (default: 10)')
     training_parser.add_argument('--no-cuda', action='store_true', default=False,
                                  help='enables CUDA training')
@@ -124,6 +124,7 @@ def main(args):
             results.plot(x='epoch', y=[key + '_train', key + '_test'])
         results.save()
         scheduler.step()
+    print(train_losses)
 
 
 def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, args):
@@ -142,6 +143,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
+        print(latest_losses)
         for key in latest_losses:
             losses[key + '_train'] += float(latest_losses[key])
             epoch_losses[key + '_train'] += float(latest_losses[key])
@@ -161,8 +163,8 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             # logging.info('z_q norm: {}'.format(float(torch.mean(torch.norm(outputs[2].contiguous().view(256,-1),2,0)))))
             for key in latest_losses:
                 losses[key + '_train'] = 0
-        if batch_idx == (len(train_loader) - 1):
-            save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_train')
+        # if batch_idx == (len(train_loader) - 1):
+        #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_train')
         if args.dataset == 'imagenet' and batch_idx * len(data) > 25000:
             break
 
