@@ -293,6 +293,7 @@ class VQ_CVAE(nn.Module):
         self.mse = 0
         self.vq_loss = Variable(torch.zeros(1))
         self.commit_loss = 0
+        self.full_mse = []
 
         for l in self.modules():
             if isinstance(l, nn.Linear) or isinstance(l, nn.Conv2d):
@@ -327,6 +328,8 @@ class VQ_CVAE(nn.Module):
 
     def loss_function(self, x, recon_x, z_e, emb, argmin):
         self.mse = F.mse_loss(recon_x, x)
+        loss = nn.MSELoss(reduction = 'none')
+        self.full_mse = loss(recon_x, x)
 
         self.vq_loss = torch.mean(torch.norm((emb - z_e.detach())**2, 2, 1))
         self.commit_loss = torch.mean(torch.norm((emb.detach() - z_e)**2, 2, 1))
@@ -334,7 +337,7 @@ class VQ_CVAE(nn.Module):
         return self.mse + self.vq_coef*self.vq_loss + self.commit_coef*self.commit_loss
 
     def latest_losses(self):
-        return {'mse': self.mse, 'vq': self.vq_loss, 'commitment': self.commit_loss}
+        return {'full_mse': self.full_mse, 'mse': self.mse, 'vq': self.vq_loss, 'commitment': self.commit_loss}
 
     def print_atom_hist(self, argmin):
 
