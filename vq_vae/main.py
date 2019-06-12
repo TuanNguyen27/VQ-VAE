@@ -143,7 +143,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
-        print(latest_losses)
+        # print(latest_losses)
         for key in latest_losses:
             losses[key + '_train'] += float(latest_losses[key])
             epoch_losses[key + '_train'] += float(latest_losses[key])
