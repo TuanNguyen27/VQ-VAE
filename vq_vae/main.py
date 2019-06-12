@@ -61,7 +61,7 @@ def main(args):
                                  help='enables CUDA training')
     training_parser.add_argument('--seed', type=int, default=1, metavar='S',
                                  help='random seed (default: 1)')
-    training_parser.add_argument('--gpus', default='1',
+    training_parser.add_argument('--gpus', default='0',
                                  help='gpus used for training - e.g 0,1,3')
 
     logging_parser = parser.add_argument_group('Logging Parameters')
