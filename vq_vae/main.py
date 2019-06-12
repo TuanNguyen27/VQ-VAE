@@ -143,7 +143,9 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
-        # print(latest_losses)
+        print("what is latest_losses")
+        print(latest_losses)
+        print("end of latest_losses")
         for key in latest_losses:
             losses[key + '_train'] += float(latest_losses[key])
             epoch_losses[key + '_train'] += float(latest_losses[key])
@@ -167,7 +169,9 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_train')
         if args.dataset == 'imagenet' and batch_idx * len(data) > 25000:
             break
+    print("what is epoch losses")
     print(epoch_losses)
+    print("end train losses")
     for key in epoch_losses:
         if args.dataset != 'imagenet':
             epoch_losses[key] /= (len(train_loader.dataset) / train_loader.batch_size)
@@ -197,7 +201,9 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
             if args.dataset == 'imagenet' and i * len(data) > 1000:
                 break
-    print(losses)            
+    print("Is this all the losses ?")
+    print(losses)
+    print("end of test losses")
     for key in losses:
         if args.dataset != 'imagenet':
             losses[key] /= (len(test_loader.dataset) / test_loader.batch_size)
