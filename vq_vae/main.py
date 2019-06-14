@@ -134,7 +134,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     epoch_losses = {k + '_train': 0 for k, v in loss_dict.items()}
     start_time = time.time()
     batch_idx, data = None, None
-    full_mse_losses = torch.Tensor()
+    full_mse_losses = []
     for batch_idx, (data, _) in enumerate(train_loader):
         if cuda:
             data = data.cuda()
@@ -144,9 +144,9 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
-        full_mse_losses = torch.cat((latest_losses['full_mse'], full_mse_losses))
-    print(full_mse_losses.reshape(-1).size())
-    return full_mse_losses.reshape(-1)
+        full_mse_losses.append((latest_losses['full_mse'])
+    print(torch.cat(full_mse_losses).reshape(-1).size())
+    return torch.cat(full_mse_losses).reshape(-1)
 
         # for key in latest_losses:
         #     losses[key + '_train'] += float(latest_losses[key])
@@ -187,7 +187,7 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
     loss_dict = model.latest_losses()
     losses = {k + '_test': 0 for k, v in loss_dict.items()}
     i, data = None, None
-    full_mse_losses = torch.Tensor()
+    full_mse_losses = []
 
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
@@ -196,9 +196,9 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             outputs = model(data)
             model.loss_function(data, *outputs)
             latest_losses = model.latest_losses()
-            full_mse_losses = torch.cat((full_mse_losses, latest_losses['full_mse']))
-    print(full_mse_losses.reshape(-1).size())
-    return full_mse_losses.reshape(-1)
+            full_mse_losses.append(latest_losses['full_mse'])
+    print(torch.cat(full_mse_losses).reshape(-1).size())
+    return torch.cat(full_mse_losses).reshape(-1)
             # for key in latest_losses:
             #     losses[key + '_test'] += float(latest_losses[key])
             # if i == 0:

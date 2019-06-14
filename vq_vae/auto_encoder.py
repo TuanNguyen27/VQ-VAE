@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 
 from nearest_embed import NearestEmbed
-torch.set_default_tensor_type(torch.cuda.FloatTensor)
+# torch.set_default_tensor_type(torch.cuda.FloatTensor)
 
 class AbstractAutoEncoder(nn.Module):
     __metaclass__ = abc.ABCMeta
