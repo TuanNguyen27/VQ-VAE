@@ -145,7 +145,6 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         optimizer.step()
         latest_losses = model.latest_losses()
         full_mse_losses.append((latest_losses['full_mse'])
-    print(torch.cat(full_mse_losses).reshape(-1).size())
     return torch.cat(full_mse_losses).reshape(-1)
 
         # for key in latest_losses:
@@ -188,7 +187,6 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
     losses = {k + '_test': 0 for k, v in loss_dict.items()}
     i, data = None, None
     full_mse_losses = []
-
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
             if cuda:
