@@ -145,6 +145,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         optimizer.step()
         latest_losses = model.latest_losses()
         full_mse_losses.append(latest_losses['full_mse'])
+    print(torch.cat(full_mse_losses).reshape(-1).size())
     return torch.cat(full_mse_losses).reshape(-1)
 
         # for key in latest_losses:
