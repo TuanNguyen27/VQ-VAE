@@ -118,12 +118,12 @@ def main(args):
     for epoch in range(1, args.epochs + 1):
         train_losses = train(epoch, model, train_loader, optimizer, args.cuda, args.log_interval, save_path, args)
         test_losses = test_net(epoch, model, test_loader, args.cuda, save_path, args)
-        results.add(epoch=epoch, **train_losses, **test_losses)
-        for k in train_losses:
-            key = k[:-6]
-            results.plot(x='epoch', y=[key + '_train', key + '_test'])
-        results.save()
-        scheduler.step()
+        # results.add(epoch=epoch, **train_losses, **test_losses)
+        # for k in train_losses:
+        #     key = k[:-6]
+        #     results.plot(x='epoch', y=[key + '_train', key + '_test'])
+        # results.save()
+        # scheduler.step()
     print(train_losses)
 
 
@@ -134,6 +134,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     epoch_losses = {k + '_train': 0 for k, v in loss_dict.items()}
     start_time = time.time()
     batch_idx, data = None, None
+    full_mse_losses = torch.Tensor()
     for batch_idx, (data, _) in enumerate(train_loader):
         if cuda:
             data = data.cuda()
@@ -143,39 +144,42 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         loss.backward()
         optimizer.step()
         latest_losses = model.latest_losses()
-        print(latest_losses['full_mse'].size())
+        full_mse_losses = torch.cat(latest_losses['full_mse'], full_mse_losses)
+    print(full_mse_losses.reshape(-1).size())
+    return full_mse_losses.reshape(-1)
+
         # for key in latest_losses:
         #     losses[key + '_train'] += float(latest_losses[key])
         #     epoch_losses[key + '_train'] += float(latest_losses[key])
 
-        if batch_idx % log_interval == 0:
-            for key in latest_losses:
-                losses[key + '_train'] /= log_interval
-            loss_string = ' '.join(['{}: {:.6f}'.format(k, v) for k, v in losses.items()])
-            logging.info('Train Epoch: {epoch} [{batch:5d}/{total_batch} ({percent:2d}%)]   time:'
-                         ' {time:3.2f}   {loss}'
-                         .format(epoch=epoch, batch=batch_idx * len(data), total_batch=len(train_loader) * len(data),
-                                 percent=int(100. * batch_idx / len(train_loader)),
-                                 time=time.time() - start_time,
-                                 loss=loss_string))
-            start_time = time.time()
+        # if batch_idx % log_interval == 0:
+        #     for key in latest_losses:
+        #         losses[key + '_train'] /= log_interval
+        #     loss_string = ' '.join(['{}: {:.6f}'.format(k, v) for k, v in losses.items()])
+        #     logging.info('Train Epoch: {epoch} [{batch:5d}/{total_batch} ({percent:2d}%)]   time:'
+        #                  ' {time:3.2f}   {loss}'
+        #                  .format(epoch=epoch, batch=batch_idx * len(data), total_batch=len(train_loader) * len(data),
+        #                          percent=int(100. * batch_idx / len(train_loader)),
+        #                          time=time.time() - start_time,
+        #                          loss=loss_string))
+        #     start_time = time.time()
             # logging.info('z_e norm: {}'.format(float(torch.mean(torch.norm(outputs[1].contiguous().view(256,-1),2,0)))))
             # logging.info('z_q norm: {}'.format(float(torch.mean(torch.norm(outputs[2].contiguous().view(256,-1),2,0)))))
-            for key in latest_losses:
-                losses[key + '_train'] = 0
+            # for key in latest_losses:
+            #     losses[key + '_train'] = 0
         # if batch_idx == (len(train_loader) - 1):
         #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_train')
-        if args.dataset == 'imagenet' and batch_idx * len(data) > 25000:
-            break
-    for key in epoch_losses:
-        if args.dataset != 'imagenet':
-            epoch_losses[key] /= (len(train_loader.dataset) / train_loader.batch_size)
-        else:
-            epoch_losses[key] /= (len(train_loader.dataset) / train_loader.batch_size)
-    loss_string = '\t'.join(['{}: {:.6f}'.format(k, v) for k, v in epoch_losses.items()])
-    logging.info('====> Epoch: {} {}'.format(epoch, loss_string))
-    model.print_atom_hist(outputs[3])
-    return epoch_losses
+    #     if args.dataset == 'imagenet' and batch_idx * len(data) > 25000:
+    #         break
+    # for key in epoch_losses:
+    #     if args.dataset != 'imagenet':
+    #         epoch_losses[key] /= (len(train_loader.dataset) / train_loader.batch_size)
+    #     else:
+    #         epoch_losses[key] /= (len(train_loader.dataset) / train_loader.batch_size)
+    # loss_string = '\t'.join(['{}: {:.6f}'.format(k, v) for k, v in epoch_losses.items()])
+    # logging.info('====> Epoch: {} {}'.format(epoch, loss_string))
+    # model.print_atom_hist(outputs[3])
+    # return epoch_losses
 
 
 def test_net(epoch, model, test_loader, cuda, save_path, args):
@@ -183,6 +187,8 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
     loss_dict = model.latest_losses()
     losses = {k + '_test': 0 for k, v in loss_dict.items()}
     i, data = None, None
+    full_mse_losses = torch.Tensor()
+
     with torch.no_grad():
         for i, (data, _) in enumerate(test_loader):
             if cuda:
@@ -190,12 +196,15 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             outputs = model(data)
             model.loss_function(data, *outputs)
             latest_losses = model.latest_losses()
+            full_mse_losses = torch.cat(full_mse_losses, latest_losses['full_mse'])
+    print(full_mse_losses.reshape(-1).size())
+    return full_mse_losses.reshape(-1)
             # for key in latest_losses:
             #     losses[key + '_test'] += float(latest_losses[key])
             # if i == 0:
             #     save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
-            if args.dataset == 'imagenet' and i * len(data) > 1000:
-                break
+            # if args.dataset == 'imagenet' and i * len(data) > 1000:
+            #     break
     # for key in losses:
     #     if args.dataset != 'imagenet':
     #         losses[key] /= (len(test_loader.dataset) / test_loader.batch_size)
@@ -203,7 +212,7 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
     #         losses[key] /= (i * len(data))
     # loss_string = ' '.join(['{}: {:.6f}'.format(k, v) for k, v in losses.items()])
     # logging.info('====> Test set losses: {}'.format(loss_string))
-    return losses
+    # return losses
 
 
 def save_reconstructed_images(data, epoch, outputs, save_path, name):
